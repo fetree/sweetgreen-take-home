@@ -2,11 +2,20 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AppliedReward {
+  code: String!
+  discountCents: Int!
+  id: ID!
+  rewardId: String!
+  status: String!
+}
+
 type Cart {
   createdAt: String!
   discountCents: Int!
   id: ID!
   items: [CartItem!]!
+  reward: AppliedReward
   status: String!
   subtotalCents: Int!
   totalCents: Int!
@@ -35,8 +44,14 @@ type Mutation {
   """Add a menu item to the cart"""
   addToCart(menuItemId: String!, quantity: Int = 1, userId: String!): Cart!
 
+  """Validate and apply a loyalty reward code to the cart"""
+  applyReward(code: String!, userId: String!): Cart!
+
   """Remove an item from the cart"""
   removeFromCart(cartItemId: String!, userId: String!): Cart!
+
+  """Remove the applied reward from the cart"""
+  removeReward(userId: String!): Cart!
 
   """Update the quantity of a cart item"""
   updateCartItemQuantity(cartItemId: String!, quantity: Int!, userId: String!): Cart!

@@ -1,4 +1,5 @@
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import { AppliedReward } from './applied-reward.model';
 import { CartItem } from './cart-item.model';
 
 @ObjectType()
@@ -23,6 +24,9 @@ export class Cart {
 
   @Field(() => Int)
   totalCents: number;
+
+  @Field(() => AppliedReward, { nullable: true })
+  reward?: AppliedReward;
 
   @Field(() => String)
   createdAt: Date;

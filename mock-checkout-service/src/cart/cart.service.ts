@@ -5,11 +5,15 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { LoyaltyService } from '../loyalty/loyalty.service';
 import { Cart } from './models/cart.model';
 
 @Injectable()
 export class CartService {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(LoyaltyService) private readonly loyalty: LoyaltyService,
+  ) {}
 
   // ─── Queries ──────────────────────────────────────────────────────────────
 
@@ -65,6 +69,57 @@ export class CartService {
     if (!cartItem) throw new NotFoundException('Cart item not found');
 
     await this.prisma.client.cartItem.delete({ where: { id: cartItemId } });
+
+    return this.toCartModel(await this.findOpenCartOrThrow(userId));
+  }
+
+  async applyReward(userId: string, code: string): Promise<Cart> {
+    const cart = await this.findOpenCartOrThrow(userId);
+
+    if (cart.items.length === 0) {
+      throw new BadRequestException('Cannot apply a reward to an empty cart');
+    }
+
+    const subtotalCents = cart.items.reduce(
+      (sum, i) => sum + i.menuItem.priceCents * i.quantity,
+      0,
+    );
+
+    const result = await this.loyalty.validate(code, subtotalCents);
+
+    if (!result.valid) {
+      throw new BadRequestException(`Reward code invalid: ${result.reason}`);
+    }
+
+    await this.prisma.client.rewardApplication.upsert({
+      where: { cartId: cart.id },
+      create: {
+        cartId: cart.id,
+        code,
+        rewardId: result.rewardId,
+        discountCents: result.discountCents,
+        status: 'PENDING',
+      },
+      update: {
+        code,
+        rewardId: result.rewardId,
+        discountCents: result.discountCents,
+        status: 'PENDING',
+        appliedAt: new Date(),
+      },
+    });
+
+    return this.toCartModel(await this.findOpenCartOrThrow(userId));
+  }
+
+  async removeReward(userId: string): Promise<Cart> {
+    const cart = await this.findOpenCartOrThrow(userId);
+
+    if (cart.reward) {
+      await this.prisma.client.rewardApplication.delete({
+        where: { cartId: cart.id },
+      });
+    }
 
     return this.toCartModel(await this.findOpenCartOrThrow(userId));
   }
@@ -136,6 +191,15 @@ export class CartService {
       subtotalCents,
       discountCents,
       totalCents,
+      reward: cart.reward
+        ? {
+            id: cart.reward.id,
+            code: cart.reward.code,
+            rewardId: cart.reward.rewardId,
+            discountCents: cart.reward.discountCents,
+            status: cart.reward.status,
+          }
+        : undefined,
       createdAt: cart.createdAt,
       updatedAt: cart.updatedAt,
     };

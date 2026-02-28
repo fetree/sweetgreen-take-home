@@ -29,6 +29,19 @@ export class CartResolver {
     return this.cartService.removeItem(userId, cartItemId);
   }
 
+  @Mutation(() => Cart, { description: 'Validate and apply a loyalty reward code to the cart' })
+  applyReward(
+    @Args('userId', { type: () => String }) userId: string,
+    @Args('code', { type: () => String }) code: string,
+  ) {
+    return this.cartService.applyReward(userId, code);
+  }
+
+  @Mutation(() => Cart, { description: 'Remove the applied reward from the cart' })
+  removeReward(@Args('userId', { type: () => String }) userId: string) {
+    return this.cartService.removeReward(userId);
+  }
+
   @Mutation(() => Cart, { description: 'Update the quantity of a cart item' })
   updateCartItemQuantity(
     @Args('userId', { type: () => String }) userId: string,

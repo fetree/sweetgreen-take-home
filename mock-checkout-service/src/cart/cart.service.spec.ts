@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { LoyaltyService } from '../loyalty/loyalty.service';
 
 const mockMenuItem = { id: 'menu-1', name: 'Harvest Bowl', priceCents: 1495, available: true };
 
@@ -31,7 +32,11 @@ describe('CartService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
-      providers: [CartService, { provide: PrismaService, useValue: mockPrisma }],
+      providers: [
+        CartService,
+        { provide: PrismaService, useValue: mockPrisma },
+        { provide: LoyaltyService, useValue: { validate: jest.fn(), redeem: jest.fn() } },
+      ],
     }).compile();
     service = module.get<CartService>(CartService);
   });
