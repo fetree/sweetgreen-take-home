@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { HealthModule } from './health/health.module';
+import { MenuModule } from './menu/menu.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
@@ -15,6 +16,7 @@ import { PrismaModule } from './prisma/prisma.module';
     }),
     PrismaModule,
     HealthModule,
+    MenuModule,
   ],
 })
 export class AppModule {}

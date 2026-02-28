@@ -2,7 +2,18 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type MenuItem {
+  available: Boolean!
+  description: String
+  id: ID!
+  name: String!
+  priceCents: Int!
+}
+
 type Query {
   """Health check"""
   health: String!
+
+  """Return all available menu items"""
+  menuItems: [MenuItem!]!
 }
