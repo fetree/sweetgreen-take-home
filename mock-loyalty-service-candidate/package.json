@@ -1,0 +1,15 @@
+{
+  "name": "mock-loyalty-service",
+  "version": "1.0.0",
+  "description": "Mock loyalty vendor service for take-home assessment",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
