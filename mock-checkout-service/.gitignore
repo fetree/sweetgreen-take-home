@@ -4,3 +4,5 @@ coverage/
 .env
 *.js.map
 .history/
+
+/generated/prisma

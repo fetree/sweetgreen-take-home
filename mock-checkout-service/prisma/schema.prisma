@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum CartStatus {
+  OPEN
+  CHECKED_OUT
+}
+
+enum RewardStatus {
+  PENDING    // validated and held on the cart
+  REDEEMED   // successfully redeemed at checkout
+  FAILED     // redemption failed definitively
+}
+
+enum LoyaltyStatus {
+  NONE       // no reward applied
+  PENDING    // redeem call in-flight or result unknown
+  REDEEMED   // confirmed redeemed
+  FAILED     // confirmed failed, discount not applied
+  AMBIGUOUS  // /redeem returned 500 — may or may not have succeeded
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model MenuItem {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  priceCents  Int
+  available   Boolean     @default(true)
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+}
+
+model Cart {
+  id        String             @id @default(cuid())
+  userId    String
+  status    CartStatus         @default(OPEN)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  items     CartItem[]
+  reward    RewardApplication?
+  order     Order?
+}
+
+model CartItem {
+  id         String   @id @default(cuid())
+  cartId     String
+  menuItemId String
+  quantity   Int
+  cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+}
+
+model RewardApplication {
+  id            String       @id @default(cuid())
+  cartId        String       @unique
+  code          String
+  rewardId      String
+  discountCents Int
+  status        RewardStatus @default(PENDING)
+  appliedAt     DateTime     @default(now())
+  cart          Cart         @relation(fields: [cartId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  cartId        String        @unique
+  userId        String
+  subtotalCents Int
+  discountCents Int           @default(0)
+  totalCents    Int
+  redemptionId  String?
+  loyaltyStatus LoyaltyStatus @default(NONE)
+  createdAt     DateTime      @default(now())
+  cart          Cart          @relation(fields: [cartId], references: [id])
+  items         OrderItem[]
+}
+
+model OrderItem {
+  id         String    @id @default(cuid())
+  orderId    String
+  menuItemId String?
+  name       String    // snapshot at time of order
+  priceCents Int       // snapshot at time of order — never floats
+  quantity   Int
+  order      Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem   MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+}
