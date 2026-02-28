@@ -2,6 +2,27 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Cart {
+  createdAt: String!
+  discountCents: Int!
+  id: ID!
+  items: [CartItem!]!
+  status: String!
+  subtotalCents: Int!
+  totalCents: Int!
+  updatedAt: String!
+  userId: String!
+}
+
+type CartItem {
+  id: ID!
+  lineCents: Int!
+  menuItemId: String!
+  name: String!
+  priceCents: Int!
+  quantity: Int!
+}
+
 type MenuItem {
   available: Boolean!
   description: String
@@ -10,7 +31,21 @@ type MenuItem {
   priceCents: Int!
 }
 
+type Mutation {
+  """Add a menu item to the cart"""
+  addToCart(menuItemId: String!, quantity: Int = 1, userId: String!): Cart!
+
+  """Remove an item from the cart"""
+  removeFromCart(cartItemId: String!, userId: String!): Cart!
+
+  """Update the quantity of a cart item"""
+  updateCartItemQuantity(cartItemId: String!, quantity: Int!, userId: String!): Cart!
+}
+
 type Query {
+  """Get the active cart for a user"""
+  cart(userId: String!): Cart
+
   """Health check"""
   health: String!
 

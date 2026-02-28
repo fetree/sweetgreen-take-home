@@ -2,6 +2,7 @@ import { join } from 'path';
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { CartModule } from './cart/cart.module';
 import { HealthModule } from './health/health.module';
 import { MenuModule } from './menu/menu.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -17,6 +18,7 @@ import { PrismaModule } from './prisma/prisma.module';
     PrismaModule,
     HealthModule,
     MenuModule,
+    CartModule,
   ],
 })
 export class AppModule {}
