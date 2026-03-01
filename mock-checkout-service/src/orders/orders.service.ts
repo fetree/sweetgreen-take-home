@@ -6,7 +6,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AlertsService } from '../alerts/alerts.service';
-import { AmbiguousRedemptionError, LoyaltyService } from '../loyalty/loyalty.service';
+import {
+  AmbiguousRedemptionError,
+  LoyaltyService,
+} from '../loyalty/loyalty.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { Order } from './models/order.model';
 
@@ -44,7 +47,8 @@ export class OrdersService {
     });
 
     if (!cart) throw new NotFoundException('No active cart found');
-    if (cart.items.length === 0) throw new BadRequestException('Cannot checkout an empty cart');
+    if (cart.items.length === 0)
+      throw new BadRequestException('Cannot checkout an empty cart');
 
     const subtotalCents = cart.items.reduce(
       (sum, i) => sum + i.menuItem.priceCents * i.quantity,
@@ -71,7 +75,7 @@ export class OrdersService {
           items: {
             create: cart.items.map((item) => ({
               menuItemId: item.menuItemId,
-              name: item.menuItem.name,       // snapshot
+              name: item.menuItem.name, // snapshot
               priceCents: item.menuItem.priceCents, // snapshot
               quantity: item.quantity,
             })),
@@ -123,7 +127,9 @@ export class OrdersService {
           },
         });
 
-        this.logger.log(`Order ${orderId} redeemed (${result.redemptionId}), saved $${(discountCents / 100).toFixed(2)}`);
+        this.logger.log(
+          `Order ${orderId} redeemed (${result.redemptionId}), saved $${(discountCents / 100).toFixed(2)}`,
+        );
       } else {
         // Definitive failure (e.g. already_redeemed) — charge full price
         await this.prisma.client.order.update({
@@ -149,13 +155,16 @@ export class OrdersService {
 
         this.logger.warn(
           `Order ${orderId} has ambiguous redemption status. ` +
-          `Background reconciliation required. Cause: ${err.cause}`,
+            `Background reconciliation required. Cause: ${err.cause}`,
         );
-        this.alerts.critical('Ambiguous loyalty redemption — manual reconciliation required', {
-          orderId,
-          rewardId: err.rewardId,
-          cause: err.cause,
-        });
+        this.alerts.critical(
+          'Ambiguous loyalty redemption — manual reconciliation required',
+          {
+            orderId,
+            rewardId: err.rewardId,
+            cause: err.cause,
+          },
+        );
       } else {
         // Network failure — request never reached the loyalty service.
         // Safe to mark as FAILED and charge full price.
@@ -164,7 +173,9 @@ export class OrdersService {
           data: { loyaltyStatus: 'FAILED' },
         });
 
-        this.logger.error(`Order ${orderId} redemption unreachable: ${err.message}`);
+        this.logger.error(
+          `Order ${orderId} redemption unreachable: ${err.message}`,
+        );
         this.alerts.warn('Loyalty service unreachable during redemption', {
           orderId,
           error: err.message,
@@ -175,7 +186,13 @@ export class OrdersService {
 
   private toOrderModel(
     order: Awaited<ReturnType<typeof this.prisma.client.order.findUnique>> & {
-      items: { id: string; menuItemId: string | null; name: string; priceCents: number; quantity: number }[];
+      items: {
+        id: string;
+        menuItemId: string | null;
+        name: string;
+        priceCents: number;
+        quantity: number;
+      }[];
     },
   ): Order {
     return {
