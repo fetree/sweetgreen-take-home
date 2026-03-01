@@ -3,6 +3,7 @@ import { BadRequestException, NotFoundException, ServiceUnavailableException } f
 import { OrdersService } from './orders.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AmbiguousRedemptionError, LoyaltyService } from '../loyalty/loyalty.service';
+import { AlertsService } from '../alerts/alerts.service';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -84,6 +85,7 @@ describe('OrdersService', () => {
         OrdersService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: LoyaltyService, useValue: mockLoyalty },
+        { provide: AlertsService, useValue: { warn: jest.fn(), critical: jest.fn() } },
       ],
     }).compile();
 

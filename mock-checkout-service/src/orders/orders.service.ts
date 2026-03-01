@@ -5,6 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { AlertsService } from '../alerts/alerts.service';
 import { AmbiguousRedemptionError, LoyaltyService } from '../loyalty/loyalty.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { Order } from './models/order.model';
@@ -16,6 +17,7 @@ export class OrdersService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(LoyaltyService) private readonly loyalty: LoyaltyService,
+    @Inject(AlertsService) private readonly alerts: AlertsService,
   ) {}
 
   // ─── Queries ──────────────────────────────────────────────────────────────
@@ -149,6 +151,11 @@ export class OrdersService {
           `Order ${orderId} has ambiguous redemption status. ` +
           `Background reconciliation required. Cause: ${err.cause}`,
         );
+        this.alerts.critical('Ambiguous loyalty redemption — manual reconciliation required', {
+          orderId,
+          rewardId: err.rewardId,
+          cause: err.cause,
+        });
       } else {
         // Network failure — request never reached the loyalty service.
         // Safe to mark as FAILED and charge full price.
@@ -158,6 +165,10 @@ export class OrdersService {
         });
 
         this.logger.error(`Order ${orderId} redemption unreachable: ${err.message}`);
+        this.alerts.warn('Loyalty service unreachable during redemption', {
+          orderId,
+          error: err.message,
+        });
       }
     }
   }
