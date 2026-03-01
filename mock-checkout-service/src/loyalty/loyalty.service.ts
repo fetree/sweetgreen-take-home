@@ -64,7 +64,11 @@ export class LoyaltyService {
    * service has a ghost failure mode — it may have recorded the redemption and
    * still returned 500. Marking FAILED would risk allowing a double redemption.
    * If this were a real project, discount is withheld until a background
-   * job confirms the outcome.
+   * job confirms the outcome. I chose 5xx and timeouts as AMBIGOUS rather than
+   * FAILED because the loyalty service has a ghost failure mode. It may have
+   * recorded the redemption before returning 500. Marking FAILED means we can retry,
+   * which may cause a double redemption. The trade-off is the customer sees full price
+   * until the background cron reconciles the credit.
    */
 
   /**
@@ -81,6 +85,10 @@ export class LoyaltyService {
    * keep the customers very happy. But if the loyalty rewards were given out so
    * easily, we would lose customer satisfaction by taking away money, which is
    * "scam-like" behavior, or lose money by just accepting all rewards.
+   * I complete the order at full price rather than applying the discount all the time,
+   * we can't confirm that the code was valid. The trade-off is the customer has a bad UX.
+   * The alternative is worse, taking money from a customer after seeing a discounted total
+   * is a scam.
    */
 
   /**
@@ -91,11 +99,28 @@ export class LoyaltyService {
    * reconcile your loyalty reward or reach out to our support team".
    * So the backend will notify the frontend that it's AMBIGUOUS and communicate to
    * the user accordingly.
+   * In the case of ambiguity from the loyalty service,
+   * the customer will see full price after seeing a discounted cart. The trade-off
+   * is another bad UX at checkout, seeing the full price, but optimistically applying
+   * unconfirmed discounts creates a worse problem in the future, financial loss or
+   * taking money from customers.
    */
 
   /**
    * @SEE - What if two concurrent checkouts try to use the same reward?
-   * In the case of this
+   * The external loyalty service determines if the rewards get applied or not.
+   * My order service will redeem whatever the external loyalty service says what
+   * is valid, of course it will be ambiguous and reconciled later if it's a 500
+   * or a timeout. Our service should not try to add its own locking mechanism for
+   * something it has no control over, that could create inconsistency between the two
+   * services. If AMBIGUOUS happens with a lock, we'd have to release it and another
+   * customer could use the same reward, causing a double redemption. If we keep the
+   * lock it could be permanently locked.
+   * I entirely rely on the loyalty service as a source of truth rather than adding,
+   * our own locking mechanism in the checkout service. The trade-off is that if the loyalty
+   * service has a race condition of its own, both concurrent redemptions could succeed
+   * before it's rejected. We accept the risk rather than trying to fix an external service --
+   * might be time to rebuild the loyalty service.
    */
 
   async redeem(rewardId: string, orderId: string): Promise<RedeemResult> {
