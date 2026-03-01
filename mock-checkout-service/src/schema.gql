@@ -47,6 +47,9 @@ type Mutation {
   """Validate and apply a loyalty reward code to the cart"""
   applyReward(code: String!, userId: String!): Cart!
 
+  """Checkout the active cart and create an order"""
+  checkout(userId: String!): Order!
+
   """Remove an item from the cart"""
   removeFromCart(cartItemId: String!, userId: String!): Cart!
 
@@ -55,6 +58,28 @@ type Mutation {
 
   """Update the quantity of a cart item"""
   updateCartItemQuantity(cartItemId: String!, quantity: Int!, userId: String!): Cart!
+}
+
+type Order {
+  cartId: String!
+  createdAt: String!
+  discountCents: Int!
+  id: ID!
+  items: [OrderItem!]!
+  loyaltyStatus: String!
+  redemptionId: String
+  subtotalCents: Int!
+  totalCents: Int!
+  userId: String!
+}
+
+type OrderItem {
+  id: ID!
+  lineCents: Int!
+  menuItemId: String
+  name: String!
+  priceCents: Int!
+  quantity: Int!
 }
 
 type Query {
@@ -66,4 +91,7 @@ type Query {
 
   """Return all available menu items"""
   menuItems: [MenuItem!]!
+
+  """Retrieve a placed order by ID"""
+  order(orderId: String!): Order!
 }
