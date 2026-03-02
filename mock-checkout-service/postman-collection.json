@@ -1,0 +1,225 @@
+{
+  "info": {
+    "name": "Sweetgreen Checkout Service",
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "description": "GraphQL API for the sweetgreen mock checkout service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "graphqlUrl",
+      "value": "{{baseUrl}}/graphql",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "user-1",
+      "type": "string"
+    },
+    {
+      "key": "menuItemId",
+      "value": "",
+      "description": "Set from a menuItems response",
+      "type": "string"
+    },
+    {
+      "key": "cartItemId",
+      "value": "",
+      "description": "Set from an addToCart or cart response",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "description": "Set from a checkout response",
+      "type": "string"
+    },
+    {
+      "key": "rewardCode",
+      "value": "SAVE500",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Health {\n  health\n}",
+                "variables": ""
+              }
+            },
+            "url": { "raw": "{{graphqlUrl}}", "host": ["{{graphqlUrl}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Menu",
+      "item": [
+        {
+          "name": "Get Menu Items",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query MenuItems {\n  menuItems {\n    id\n    name\n    priceCents\n    available\n  }\n}",
+                "variables": ""
+              }
+            },
+            "url": { "raw": "{{graphqlUrl}}", "host": ["{{graphqlUrl}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query GetCart($userId: String!) {\n  cart(userId: $userId) {\n    id\n    userId\n    status\n    subtotalCents\n    discountCents\n    totalCents\n    items {\n      id\n      menuItemId\n      name\n      priceCents\n      quantity\n      lineCents\n    }\n    reward {\n      id\n      code\n      discountCents\n      status\n    }\n    createdAt\n    updatedAt\n  }\n}",
+                "variables": "{\n  \"userId\": \"{{userId}}\"\n}"
+              }
+            },
+            "url": { "raw": "{{graphqlUrl}}", "host": ["{{graphqlUrl}}"] }
+          }
+        },
+        {
+          "name": "Add To Cart",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation AddToCart($userId: String!, $menuItemId: String!, $quantity: Int) {\n  addToCart(userId: $userId, menuItemId: $menuItemId, quantity: $quantity) {\n    id\n    subtotalCents\n    discountCents\n    totalCents\n    items {\n      id\n      menuItemId\n      name\n      priceCents\n      quantity\n      lineCents\n    }\n  }\n}",
+                "variables": "{\n  \"userId\": \"{{userId}}\",\n  \"menuItemId\": \"{{menuItemId}}\",\n  \"quantity\": 1\n}"
+              }
+            },
+            "url": { "raw": "{{graphqlUrl}}", "host": ["{{graphqlUrl}}"] }
+          }
+        },
+        {
+          "name": "Update Cart Item Quantity",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateCartItemQuantity($userId: String!, $cartItemId: String!, $quantity: Int!) {\n  updateCartItemQuantity(userId: $userId, cartItemId: $cartItemId, quantity: $quantity) {\n    id\n    subtotalCents\n    totalCents\n    items {\n      id\n      name\n      quantity\n      lineCents\n    }\n  }\n}",
+                "variables": "{\n  \"userId\": \"{{userId}}\",\n  \"cartItemId\": \"{{cartItemId}}\",\n  \"quantity\": 2\n}"
+              }
+            },
+            "url": { "raw": "{{graphqlUrl}}", "host": ["{{graphqlUrl}}"] }
+          }
+        },
+        {
+          "name": "Remove From Cart",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation RemoveFromCart($userId: String!, $cartItemId: String!) {\n  removeFromCart(userId: $userId, cartItemId: $cartItemId) {\n    id\n    subtotalCents\n    totalCents\n    items {\n      id\n      name\n      quantity\n    }\n  }\n}",
+                "variables": "{\n  \"userId\": \"{{userId}}\",\n  \"cartItemId\": \"{{cartItemId}}\"\n}"
+              }
+            },
+            "url": { "raw": "{{graphqlUrl}}", "host": ["{{graphqlUrl}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Loyalty",
+      "item": [
+        {
+          "name": "Apply Reward",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation ApplyReward($userId: String!, $code: String!) {\n  applyReward(userId: $userId, code: $code) {\n    id\n    subtotalCents\n    discountCents\n    totalCents\n    reward {\n      id\n      code\n      discountCents\n      status\n    }\n  }\n}",
+                "variables": "{\n  \"userId\": \"{{userId}}\",\n  \"code\": \"{{rewardCode}}\"\n}"
+              }
+            },
+            "url": { "raw": "{{graphqlUrl}}", "host": ["{{graphqlUrl}}"] }
+          }
+        },
+        {
+          "name": "Remove Reward",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation RemoveReward($userId: String!) {\n  removeReward(userId: $userId) {\n    id\n    subtotalCents\n    discountCents\n    totalCents\n    reward {\n      id\n    }\n  }\n}",
+                "variables": "{\n  \"userId\": \"{{userId}}\"\n}"
+              }
+            },
+            "url": { "raw": "{{graphqlUrl}}", "host": ["{{graphqlUrl}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Checkout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation Checkout($userId: String!) {\n  checkout(userId: $userId) {\n    id\n    cartId\n    userId\n    subtotalCents\n    discountCents\n    totalCents\n    loyaltyStatus\n    redemptionId\n    items {\n      id\n      name\n      priceCents\n      quantity\n      lineCents\n    }\n    createdAt\n  }\n}",
+                "variables": "{\n  \"userId\": \"{{userId}}\"\n}"
+              }
+            },
+            "url": { "raw": "{{graphqlUrl}}", "host": ["{{graphqlUrl}}"] }
+          }
+        },
+        {
+          "name": "Get Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query GetOrder($orderId: String!) {\n  order(orderId: $orderId) {\n    id\n    cartId\n    userId\n    subtotalCents\n    discountCents\n    totalCents\n    loyaltyStatus\n    redemptionId\n    items {\n      id\n      name\n      priceCents\n      quantity\n      lineCents\n    }\n    createdAt\n  }\n}",
+                "variables": "{\n  \"orderId\": \"{{orderId}}\"\n}"
+              }
+            },
+            "url": { "raw": "{{graphqlUrl}}", "host": ["{{graphqlUrl}}"] }
+          }
+        }
+      ]
+    }
+  ]
+}
